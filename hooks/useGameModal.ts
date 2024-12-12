@@ -12,6 +12,7 @@ interface GameModalState {
   showShare: boolean;
   showRestart: boolean;
   buttonText: string;
+  shareImage?: string;
   onShare?: () => void;
   onRestart?: () => void;
   setModal: (params: Partial<Omit<GameModalState, 'setModal' | 'closeModal'>>) => void;
@@ -26,6 +27,7 @@ export const useGameModal = create<GameModalState>((set) => ({
   showShare: false,
   showRestart: true,
   buttonText: 'OK',
+  shareImage: undefined,
   setModal: (params) => set({ isOpen: true, ...params }),
-  closeModal: () => set({ isOpen: false, type: null }),
+  closeModal: () => set({ isOpen: false, type: null, shareImage: undefined }),
 })); 

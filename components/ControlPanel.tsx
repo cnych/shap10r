@@ -4,7 +4,7 @@ import { useGameControls } from '@/hooks/useGameControls'
 import { useModal } from '@/hooks/useModal'
 import { useGameTheme } from '@/hooks/useGameTheme'
 import { Moon, Sun } from 'lucide-react'
-import { ShapesPanel } from './ShapesPanel'
+import { ShapesPanel } from '@/components/ShapesPanel'
 
 export const ControlPanel = () => {
   const { handleCancel, handleConfirm } = useGameControls('gameCanvas');
@@ -12,12 +12,12 @@ export const ControlPanel = () => {
   const { theme, toggleTheme } = useGameTheme();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-primary/90 backdrop-blur-sm p-4 border-t control-panel">
+    <div className="fixed bottom-0 left-0 right-0 bg-primary-foreground backdrop-blur-sm p-4 border-t border-primary/90 control-panel">
       <div className="max-w-screen-md mx-auto flex items-center justify-between">
         {/* 左侧游戏信息 */}
         <div className="flex-none flex flex-col sm:flex-row gap-2">
           <button 
-            className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-orange-500 text-primary-foreground flex items-center justify-center hover:bg-secondary/80 transition-colors"
+            className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-orange-500 text-primary-foreground flex items-center justify-center hover:bg-orange-400 transition-colors"
             aria-label="帮助"
             onClick={showHelpModal}
           >

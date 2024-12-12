@@ -59,9 +59,9 @@ export function useGameControls(canvasId: string) {
    * 处理分享操作
    * 分享游戏结果
    */
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     if (!game) return;
-    game.shareResult();
+    await game.shareResult();
   }, [game]);
 
   return {

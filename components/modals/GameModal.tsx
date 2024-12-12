@@ -16,6 +16,7 @@ interface GameModalProps {
   onShare?: () => void;
   onRestart?: () => void;
   buttonText?: string;
+  shareImage?: string;
 }
 
 export const GameModal: FC<GameModalProps> = ({
@@ -28,6 +29,7 @@ export const GameModal: FC<GameModalProps> = ({
   onShare,
   onRestart,
   buttonText = "Restart",
+  shareImage,
 }) => {
   if (!isOpen) return null;
 
@@ -48,23 +50,32 @@ export const GameModal: FC<GameModalProps> = ({
       <div className="bg-card text-card-foreground rounded-lg p-6 max-w-sm w-full mx-4 shadow-lg">
         <div className="text-center">
           <h2 className="text-xl font-bold mb-4">{title}</h2>
-          <div className="message whitespace-pre-line mb-6">
+          <div className="message whitespace-pre-line mb-4">
             {renderMessage()}
           </div>
+
+          {shareImage && (
+            <div className="mb-6 w-full">
+              <img
+                src={shareImage}
+                alt="Game Result"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
 
           <div className="flex gap-4 justify-center">
             {showShare && (
               <button
                 onClick={onShare}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-              >
+                className="px-4 py-2 bg-orange-500 text-primary-foreground rounded hover:bg-orange-400 transition-colors">
                 Share
               </button>
             )}
             {showRestart && (
               <button
                 onClick={onRestart}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 bg-orange-500 text-primary-foreground rounded hover:bg-orange-400 transition-colors"
               >
                 {buttonText}
               </button>

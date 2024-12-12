@@ -5,16 +5,6 @@ import type { Solution, IGame } from '@/lib/types';
 import { useGameModal } from '@/hooks/useGameModal';
 
 
-interface GameModalElements {
-  modal: HTMLDivElement;
-  title: HTMLHeadingElement;
-  message: HTMLDivElement;
-  finalScore: HTMLSpanElement;
-  finalScoreWrapper: HTMLParagraphElement;
-  restartBtn: HTMLButtonElement;
-  shareBtn: HTMLButtonElement;
-}
-
 export class Game implements IGame {
   private canvas: HTMLCanvasElement;  // 游戏画布
   private ctx: CanvasRenderingContext2D;  // 画布上下文
@@ -249,7 +239,7 @@ export class Game implements IGame {
     this.shapesManager.initializeShapes();
     this.shapesManager.assignNumbers();
     
-    // 重新生��目标答案
+    // 重新生成目标答案
     this.generateTarget();
     
     // 绘游戏界面
@@ -335,7 +325,7 @@ export class Game implements IGame {
       }
     });
 
-    // 检查位置确（黄色）
+    // 检查位
     if (!isWin && this.solution) {
       const solutionCopy = [...this.solution];
       const usedSolutions = new Set<number>();
@@ -450,11 +440,11 @@ export class Game implements IGame {
             // 从点击记录中删除该形状
             const clickedShapes = this.shapesManager.getClickedShapes();
             clickedShapes.delete(shapeToRemove.getKey());
-            // 立即通知状态变化，触发重新渲染
+            // 即通知状态变化，触发重新渲染
             this.notifyStateChanged();
           }
           
-          // 从网格中移除形状
+          // 从网中移除形状
           this.grid[this.currentRow][lastFilledIndex] = null;
           this.activeCol = lastFilledIndex;
           
@@ -488,7 +478,7 @@ export class Game implements IGame {
           newShape.state = SHAPE_STATE.CORRECT;
           // 将新形状复制到当前行
           this.grid[this.currentRow][col] = newShape;
-          // 跳过当前列
+          // 过当前列
           continue;
         }
       }
@@ -508,21 +498,6 @@ export class Game implements IGame {
     return -1;
   }
 
-  private getModalElements(): Partial<GameModalElements> {
-    const modal = document.getElementById('gameOverModal') as HTMLDivElement;
-    if (!modal) return {};
-
-    return {
-      modal,
-      title: modal.querySelector('h2') as HTMLHeadingElement,
-      message: modal.querySelector('.message') as HTMLDivElement,
-      finalScore: modal.querySelector('#final-score') as HTMLSpanElement,
-      finalScoreWrapper: modal.querySelector('#final-score-wrapper') as HTMLParagraphElement,
-      restartBtn: modal.querySelector('#restartBtn') as HTMLButtonElement,
-      shareBtn: modal.querySelector('#shareBtn') as HTMLButtonElement
-    };
-  }
-
   private showTipModal(): void {
     this.soundManager.play('wrong');
     useGameModal.getState().setModal({
@@ -536,11 +511,157 @@ export class Game implements IGame {
     });
   }
 
-  private handleWin(): void {
+  private async generateShareImage(): Promise<{ blob: Blob; dataUrl: string } | null> {
+    if (typeof window === 'undefined') return null;
+
+    const offscreenCanvas = document.createElement('canvas');
+    const ctx = offscreenCanvas.getContext('2d');
+    if (!ctx) return null;
+
+    const gameWidth = this.canvas.width;
+    const gameHeight = this.canvas.height;
+    // 减小宽度，使两边留白更少
+    const width = gameWidth;
+    const height = Math.min(gameHeight * 0.8, gameWidth * 1.4);
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+
+    // 填充渐变背景
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#1a1a1a');
+    gradient.addColorStop(1, '#2a2a2a');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // 添加装饰性圆点
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    for (let i = 0; i < 20; i++) {
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      const radius = Math.random() * width * 0.01;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 添加标题
+    const titleY = height * 0.08;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.floor(height * 0.06)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Shap10r Online', width / 2, titleY);
+
+    // 计算游戏画布的缩放和位置
+    const scale = Math.min((width * 0.9) / gameWidth, (height * 0.65) / gameHeight);
+    const scaledWidth = gameWidth * scale;
+    const scaledHeight = gameHeight * scale;
+    const x = (width - scaledWidth) / 2;
+    const y = height * 0.15;
+
+    // 绘制游戏画布
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.drawImage(this.canvas, 0, 0);
+    ctx.restore();
+
+    // 添加游戏结果
+    const steps = this.currentRow + 1;
+    if (this.gameOver) {
+      const resultText = this.gameOver && this.solution ? `${steps} steps to find the answer!` : 'Challenge failed';
+      
+      // 结果文本
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.floor(height * 0.035)}px Arial`;
+      ctx.fillText(resultText, width / 2, y + scaledHeight + height * 0.06);
+    }
+
+    // 添加分享文案、二维码和网站地址
+    const bottomY = height * 0.93;
+    
+    // 二维码
+    const qr = await this.generateQRCode(window.location.href);
+    if (qr) {
+      const qrSize = height * 0.11;
+      const qrX = width * 0.82;
+      const qrY = bottomY;
+      
+      // 二维码背景
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.beginPath();
+      ctx.arc(qrX, qrY, qrSize * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 绘制二维码
+      ctx.drawImage(qr, qrX - qrSize/2, qrY - qrSize/2, qrSize, qrSize);
+    }
+
+    // 添加网站地址
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.font = `${Math.floor(height * 0.024)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText(window.location.origin, width / 2, bottomY);
+
+    // 生成 data URL 用于预览
+    const dataUrl = offscreenCanvas.toDataURL('image/png');
+
+    // 生成 Blob 用于分享
+    const blob = await new Promise<Blob>((resolve) => {
+      offscreenCanvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          resolve(new Blob([]));
+        }
+      }, 'image/png');
+    });
+
+    return { blob, dataUrl };
+  }
+
+  private async generateQRCode(url: string): Promise<HTMLImageElement | null> {
+    try {
+      const QRCode = (await import('qrcode')).default;
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#FFFFFF',
+          light: '#00000000'
+        }
+      });
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      });
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+      return null;
+    }
+  }
+
+  private async handleWin(): Promise<void> {
     this.gameOver = true;
     this.soundManager.play('win');
     
+    // 将最后一行的所有形状标记为正确
+    const currentRowShapes = this.grid[this.currentRow].slice(0, 5);
+    currentRowShapes.forEach((shape) => {
+      if (shape) {
+        shape.state = SHAPE_STATE.CORRECT;
+      }
+    });
+    
+    // 重新绘制画布以显示更新后的状态
+    this.draw();
+    
     const steps = this.currentRow + 1;
+    const shareImage = await this.generateShareImage();
+    
     useGameModal.getState().setModal({
       type: 'win',
       title: 'Congratulations!',
@@ -548,46 +669,74 @@ export class Game implements IGame {
       showShare: true,
       showRestart: true,
       buttonText: 'Restart',
-      onShare: () => this.shareResult(),
+      shareImage: shareImage?.dataUrl,
+      onShare: () => this.shareResult(shareImage?.blob),
       onRestart: () => this.resetGame(),
     });
   }
 
-  private handleLoss(): void {
+  private async handleLoss(): Promise<void> {
     this.gameOver = true;
     this.soundManager.play('lose');
+    
+    // 直接生成分享图片，保持最后一行的原始状态
+    const shareImage = await this.generateShareImage();
 
     useGameModal.getState().setModal({
       type: 'loss',
-      title: '游戏结束',
+      title: 'Game Over',
       message: { type: 'correct-answer', solution: this.solution },
-      showShare: false,
+      showShare: true,
       showRestart: true,
-      buttonText: '重新开始',
+      buttonText: 'Restart',
+      shareImage: shareImage?.dataUrl,
+      onShare: () => this.shareResult(shareImage?.blob),
       onRestart: () => this.resetGame(),
     });
   }
 
-  public shareResult(): void {
+  private async fallbackToClipboard(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Share content copied to clipboard!');
+    } catch (err) {
+      console.error('Copy failed:', err);
+      alert('Please copy the following content manually:\n\n' + text);
+    }
+  }
+
+  public async shareResult(imageBlob?: Blob): Promise<void> {
     this.soundManager.play('click');
     const steps = this.currentRow + 1;
-    const shareText = `I won the Shap10r game!\nI found the answer in ${steps} ${steps === 1 ? 'step' : 'steps'}!\nChallenge yourself: ${window.location.href}`;
+    const shareText = `I found the answer in ${steps} ${steps === 1 ? 'step' : 'steps'} in Shap10r! Try it: ${window.location.href}`;
     
-    if (navigator.share) {
-      navigator.share({
-        title: 'Shap10r Game Share',
-        text: shareText,
-        url: window.location.href
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(shareText)
-        .then(() => {
-          alert('Share content copied to clipboard!');
-        })
-        .catch(err => {
-          console.error('Copy failed:', err);
-          alert('Please manually copy the following content:\n\n' + shareText);
-        });
+    try {
+      if (navigator.share && imageBlob) {
+        const file = new File([imageBlob], 'shap10r-result.png', { type: 'image/png' });
+        try {
+          await navigator.share({
+            title: 'Shap10r Share',
+            text: shareText,
+            url: window.location.href,
+            files: [file]
+          });
+        } catch (error) {
+          // 如果是用户取消分享，不显示错误信息
+          if ((error as Error).name === 'AbortError') {
+            return;
+          }
+          // 其他错误则降级到剪贴板分享
+          console.error('Share failed:', error);
+          await this.fallbackToClipboard(shareText);
+        }
+      } else {
+        // 如支持原生分享或图片生成失败，复制文本
+        await this.fallbackToClipboard(shareText);
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      // 降级到文本分享
+      await this.fallbackToClipboard(shareText);
     }
   }
 
