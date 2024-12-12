@@ -225,7 +225,6 @@ export class ShapesManager {
 
     // 如果当前行已经检查过，则不允许放置
     if (this.game.checkedRows[this.game.currentRow]) {
-      console.log('【ShapesManager】当前行已检查，不允许放置');
       return;
     }
 
@@ -239,17 +238,14 @@ export class ShapesManager {
 
     // 如果形状已在当前行使用过，则不允许再次使用
     if (isShapeUsedInCurrentRow) {
-      console.log('【ShapesManager】形状已在当前行使用过');
       return;
     }
 
     // 找到下一个空单元格并放置形状
     const col = this.game.findNextEmptyCell();
     if (col !== -1) {
-      console.log('【ShapesManager】放置形状前的点击记录:', this.clickedShapes);
       this.game.placeShape(shape, this.game.currentRow, col);
       this.clearSelection();
-      console.log('【ShapesManager】放置形状后的点击记录:', this.clickedShapes);
     }
   }
 

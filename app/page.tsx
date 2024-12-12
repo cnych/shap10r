@@ -1,6 +1,6 @@
 import GameBoard from '@/components/GameBoard'
 import ControlPanel from '@/components/ControlPanel'
-import GameOverModal from '@/components/modals/GameOverModal'
+import { GameModalWrapper } from '@/components/GameModalWrapper'
 import HelpModal from '@/components/modals/HelpModal'
 
 export default function Home() {
@@ -18,7 +18,7 @@ export default function Home() {
         <ControlPanel />
       </div>
       
-      <GameOverModal />
+      <GameModalWrapper />
       <HelpModal />
     </main>
   )

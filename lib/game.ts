@@ -1,8 +1,9 @@
 import { GAME_CONFIG, runtimeConfig, SHAPE_STATE } from '@/lib/constants';
 import { Shape, ShapesManager } from '@/lib/shapes';
 import { SoundManager } from '@/lib/sound';
-import { StorageManager, StorageGameState } from '@/lib/storage';
 import type { Solution, IGame } from '@/lib/types';
+import { useGameModal } from '@/hooks/useGameModal';
+
 
 interface GameModalElements {
   modal: HTMLDivElement;
@@ -107,7 +108,7 @@ export class Game implements IGame {
     const gap = runtimeConfig.gapSize;
     const actualCellSize = runtimeConfig.cellSize;
     
-    // 绘制网格，添加��下左右边距
+    // 绘制网格，添加上下左右边距
     for (let row = 0; row < GAME_CONFIG.GRID_ROWS; row++) {
       for (let col = 0; col < GAME_CONFIG.GRID_COLS; col++) {
         const x = gap + col * (actualCellSize + gap); // 左边距
@@ -231,6 +232,9 @@ export class Game implements IGame {
   }
 
   public resetGame(): void {
+    // 关闭模态框
+    useGameModal.getState().closeModal();
+    
     this.grid = Array(GAME_CONFIG.GRID_ROWS).fill(null).map(() => 
       Array(GAME_CONFIG.GRID_COLS).fill(null)
     );
@@ -245,10 +249,10 @@ export class Game implements IGame {
     this.shapesManager.initializeShapes();
     this.shapesManager.assignNumbers();
     
-    // 重新生成目标答案
+    // 重新生��目标答案
     this.generateTarget();
     
-    // 重绘游戏界面
+    // 绘游戏界面
     this.draw();
 
     this.notifyStateChanged();
@@ -283,7 +287,7 @@ export class Game implements IGame {
   public checkWinCondition(): void {
     const currentRowShapes = this.grid[this.currentRow].slice(0, 5);
     
-    // 检查上一行的色元素使用况
+    // 查上一行的色元素使用况
     if (this.currentRow > 0) {
       const prevRowShapes = this.grid[this.currentRow - 1].slice(0, 5);
       const yellowShapes = prevRowShapes.filter(shape => shape?.state === SHAPE_STATE.EXISTS);
@@ -331,7 +335,7 @@ export class Game implements IGame {
       }
     });
 
-    // 检查位置不正确（黄色）
+    // 检查位置确（黄色）
     if (!isWin && this.solution) {
       const solutionCopy = [...this.solution];
       const usedSolutions = new Set<number>();
@@ -473,7 +477,7 @@ export class Game implements IGame {
       if (this.grid[this.currentRow][col]) continue;
       // 如果当前行大于0，则检查上一行是否正确
       if (this.currentRow > 0) {
-        // 获取上一行该位置的形状
+        // 取上一行该位置的形状
         const prevRowShape = this.grid[this.currentRow - 1][col];
         // 如果该形状状态为正确，则将该形状复制到当前行
         if (prevRowShape?.state === SHAPE_STATE.CORRECT) {
@@ -521,88 +525,47 @@ export class Game implements IGame {
 
   private showTipModal(): void {
     this.soundManager.play('wrong');
-    
-    const elements = this.getModalElements();
-    if (!elements.modal) return;
-
-    if (elements.title) elements.title.textContent = 'Tip';
-    if (elements.finalScoreWrapper) elements.finalScoreWrapper.style.display = 'none';
-    if (elements.finalScore) elements.finalScore.style.display = 'none';
-    if (elements.shareBtn) elements.shareBtn.style.display = 'none';
-    
-    let message = elements.message;
-    if (!message) {
-      message = document.createElement('div');
-      message.className = 'message';
-      const buttonGroup = elements.modal.querySelector('.button-group');
-      if (buttonGroup) {
-        elements.modal.querySelector('.modal-content')?.insertBefore(message, buttonGroup);
-      }
-    }
-    if (message) {
-      message.textContent = "You must use the yellow shapes from the previous row!";
-      message.style.whiteSpace = 'pre-line';
-    }
-    
-    if (elements.restartBtn) elements.restartBtn.textContent = 'OK';
-    elements.modal.style.display = 'flex';
+    useGameModal.getState().setModal({
+      type: 'tip',
+      title: 'Tips',
+      message: 'Remember to use the yellow marked shapes from the previous row!',
+      showShare: false,
+      showRestart: true,
+      buttonText: 'OK',
+      onRestart: () => useGameModal.getState().closeModal(),
+    });
   }
 
   private handleWin(): void {
     this.gameOver = true;
     this.soundManager.play('win');
     
-    const elements = this.getModalElements();
-    if (!elements.modal) return;
-
-    if (elements.title) elements.title.textContent = 'Congratulations!';
-    if (elements.finalScore?.parentElement) elements.finalScore.parentElement.style.display = 'none';
-    
-    const message = elements.message as HTMLDivElement;
-    if (message) {
-      const steps = this.currentRow + 1;
-      message.textContent = `You found the answer in ${steps} ${steps === 1 ? 'step' : 'steps'}!`;
-      message.style.whiteSpace = 'pre-line';
-    }
-    
-    const shareBtn = elements.shareBtn as HTMLButtonElement;
-    if (shareBtn) {
-      shareBtn.style.display = 'block';
-      shareBtn.textContent = 'Share with friends';
-      shareBtn.onclick = () => this.shareResult();
-    }
-    
-    const restartBtn = elements.restartBtn as HTMLButtonElement;
-    if (restartBtn) restartBtn.textContent = 'Restart';
-    elements.modal.style.display = 'flex';
+    const steps = this.currentRow + 1;
+    useGameModal.getState().setModal({
+      type: 'win',
+      title: 'Congratulations!',
+      message: `You found the answer in ${steps} ${steps === 1 ? 'step' : 'steps'}!`,
+      showShare: true,
+      showRestart: true,
+      buttonText: 'Restart',
+      onShare: () => this.shareResult(),
+      onRestart: () => this.resetGame(),
+    });
   }
 
   private handleLoss(): void {
     this.gameOver = true;
     this.soundManager.play('lose');
-    
-    const elements = this.getModalElements();
-    if (!elements.modal) return;
 
-    if (elements.title) elements.title.textContent = '游戏结束';
-    if (elements.finalScore?.parentElement) elements.finalScore.parentElement.style.display = 'none';
-    
-    const shareBtn = elements.shareBtn as HTMLButtonElement;
-    if (shareBtn) shareBtn.style.display = 'none';
-    
-    const correctAnswer = this.solution?.map((shape, index) => 
-      `位置${index + 1}: ${shape.type}(${shape.color}) - ${shape.number}`
-    ).join('\n') ?? '';
-    
-    const message = elements.message as HTMLDivElement;
-    if (message) {
-      message.textContent = `正确答案：\n${correctAnswer}`;
-      message.style.whiteSpace = 'pre-line';
-    }
-    
-    const restartBtn = elements.restartBtn as HTMLButtonElement;
-    if (restartBtn) restartBtn.textContent = '重新开始';
-    elements.modal.style.display = 'flex';
+    useGameModal.getState().setModal({
+      type: 'loss',
+      title: '游戏结束',
+      message: { type: 'correct-answer', solution: this.solution },
+      showShare: false,
+      showRestart: true,
+      buttonText: '重新开始',
+      onRestart: () => this.resetGame(),
+    });
   }
 
   public shareResult(): void {

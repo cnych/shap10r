@@ -28,15 +28,6 @@ const ShapeButton: FC<ShapeButtonProps> = ({
   state,
   onClick,
 }) => {
-//   console.log('【ShapeButton】渲染形状按钮:', {
-//     形状类型: shape.type,
-//     颜色: shape.color,
-//     激活状态: isActive,
-//     禁用状态: isDisabled,
-//     点击状态: isClicked,
-//     形状态: state
-//   });
-
   // 创建canvas引用
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -83,8 +74,6 @@ const ShapeButton: FC<ShapeButtonProps> = ({
     .filter(Boolean)
     .join(" ");
 
-  console.log('【ShapeButton】按钮样式类:', className, state, isClicked, isDisabled, isActive);
-
   return (
     <button className={className} disabled={isDisabled} onClick={onClick}>
       <canvas ref={canvasRef} />
@@ -94,12 +83,8 @@ const ShapeButton: FC<ShapeButtonProps> = ({
 
 // 形状面板组件
 export const ShapesPanel: FC = () => {
-  console.log('【ShapesPanel】开始渲染形状面板');
-  
   // 获取游戏状态，包括更新触发器
   const { game, currentRow, grid, updateTrigger } = useGameState("gameCanvas");
-  // 记录已点击过的形状
-//   const [clickedShapes, setClickedShapes] = useState(new Set<string>());
   // 记录形状状态
   const [shapeStates, setShapeStates] = useState<
     Map<string, ShapeStateType>
@@ -107,7 +92,6 @@ export const ShapesPanel: FC = () => {
 
   // 监听网格变化，更新形状状态
   useEffect(() => {
-    console.log('【ShapesPanel】检测到网格变化，更新形状状态');
     if (!game) {
       console.warn('【ShapesPanel】游戏实例未初始化');
       return;
@@ -119,7 +103,6 @@ export const ShapesPanel: FC = () => {
     for (let row = 0; row <= currentRow; row++) {
       if (!game.checkedRows[row]) continue;
 
-      console.log(`【ShapesPanel】处理第${row}行形状状态`);
       // 检查每一列的形状
       for (let col = 0; col < 5; col++) {
         const shape = grid[row][col];
@@ -127,13 +110,6 @@ export const ShapesPanel: FC = () => {
 
         const key = `${shape.type}-${shape.color}`;
         const currentState = shape.state;
-
-        console.log('【ShapesPanel】形状状态:', {
-          行: row,
-          列: col,
-          形状: key,
-          状态: currentState
-        });
 
         // 更新形状状态(优先保存CORRECT状态)
         if (
@@ -148,37 +124,7 @@ export const ShapesPanel: FC = () => {
     }
 
     setShapeStates(newStates);
-    console.log('【ShapesPanel】形状状态更新完成:', newStates);
   }, [game, grid, currentRow, game?.checkedRows, updateTrigger]);
-
-  // 处理形状取消选择
-//   useEffect(() => {
-//     console.log('【ShapesPanel】处理形状取消选择');
-//     if (!game) return;
-
-//     game.shapesManager.shapes.forEach((shape, index) => {
-//       const shapeKey = shape.getKey();
-    
-//       if (index === 0) {
-//         console.log('【ShapesPanel】检查形状:', {
-//             索引: index,
-//             键值: shapeKey,
-//             是否被选中: game.shapesManager.isSelected(index),
-//             是否被点击: clickedShapes.has(shapeKey)
-//         });
-//       }
-
-//       // 如果形状未被选中且之前被点击过，则从点击记录中移除
-//       if (!game.shapesManager.isSelected(index) && clickedShapes.has(shapeKey)) {
-//         console.log(`【ShapesPanel】从点击记录中移除形状: ${shapeKey}`);
-//         setClickedShapes((prev) => {
-//           const newSet = new Set(prev);
-//           newSet.delete(shapeKey);
-//           return newSet;
-//         });
-//       }
-//     });
-//   }, [game, clickedShapes]);
 
   if (!game) {
     console.warn('【ShapesPanel】游戏未初始化，不渲染面板');
@@ -189,13 +135,6 @@ export const ShapesPanel: FC = () => {
   const currentRowShapes = grid[currentRow]?.slice(0, 5) || [];
   const isRowFull = currentRowShapes.every((shape) => shape !== null);
   const isRowChecked = game.checkedRows[currentRow];
-
-//   console.log('【ShapesPanel】当前行状态:', {
-//     行号: currentRow,
-//     形状数组: currentRowShapes,
-//     是否已满: isRowFull,
-//     是否已检查: isRowChecked
-//   });
 
   // 检查形状是否在之前的行中被正确使用过
   const isShapeCorrectInPreviousRows = (shape: Shape): boolean => {
@@ -208,7 +147,6 @@ export const ShapesPanel: FC = () => {
           gridShape.color === shape.color
       );
       if (foundShape && foundShape.state === SHAPE_STATE.CORRECT) {
-        console.log(`【ShapesPanel】形状在第${row}行被正确使用:`, shape);
         return true;
       }
     }
@@ -223,19 +161,13 @@ export const ShapesPanel: FC = () => {
         gridShape.type === shape.type &&
         gridShape.color === shape.color
     );
-    // console.log('【ShapesPanel】检查形状在当前行使用状态:', {
-    //   形状: `${shape.type}-${shape.color}`,
-    //   是否使用: isUsed
-    // });
     return isUsed;
   };
 
   // 处理形状点击事件
   const handleShapeClick = (index: number) => {
-    console.log('【ShapesPanel】形状点击前的记录:', game.shapesManager.getClickedShapes());
     if (!game) return;
     game.shapesManager.selectShape(index);
-    console.log('【ShapesPanel】形状点击后的记录:', game.shapesManager.getClickedShapes());
   };
 
   return (
@@ -246,17 +178,6 @@ export const ShapesPanel: FC = () => {
         const shapeKey = `${shape.type}-${shape.color}`;
         const isClicked = game.shapesManager.isClickedByIndex(index);
         const state = shapeStates.get(shapeKey) || "normal";
-
-        if (index === 0) {
-            console.log('【ShapesPanel】渲染形状按钮:', {
-            索引: index,
-            形状: shapeKey,
-            当前行已使用: isUsedInCurrentRow,
-            之前正确使用: isCorrectPreviously,
-            已点击: isClicked,
-            状态: state
-            });
-        }
 
         // 判断按钮是否应该禁用
         const shouldDisable =

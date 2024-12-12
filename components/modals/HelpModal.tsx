@@ -1,10 +1,8 @@
 'use client'
 
-import { useGame } from '@/hooks/useGame'
 import { useModal } from '@/hooks/useModal'
 
 const HelpModal = () => {
-  const game = useGame('gameCanvas');
   const { hideModal } = useModal('helpModal');
 
   return (

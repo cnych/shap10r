@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useGameState } from '@/hooks/useGameState'
 import { useGameControls } from '@/hooks/useGameControls'
 import { useModal } from '@/hooks/useModal'
 import { useGameTheme } from '@/hooks/useGameTheme'
@@ -9,7 +7,6 @@ import { Moon, Sun } from 'lucide-react'
 import { ShapesPanel } from './ShapesPanel'
 
 export const ControlPanel = () => {
-//   const { game } = useGameState('gameCanvas');
   const { handleCancel, handleConfirm } = useGameControls('gameCanvas');
   const { showModal: showHelpModal } = useModal('helpModal');
   const { theme, toggleTheme } = useGameTheme();
