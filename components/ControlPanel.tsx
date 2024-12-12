@@ -12,7 +12,7 @@ export const ControlPanel = () => {
   const { theme, toggleTheme } = useGameTheme();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-primary/90 backdrop-blur-sm p-4 border-t border-border control-panel">
+    <div className="fixed bottom-0 left-0 right-0 bg-primary/90 backdrop-blur-sm p-4 border-t control-panel">
       <div className="max-w-screen-md mx-auto flex items-center justify-between">
         {/* 左侧游戏信息 */}
         <div className="flex-none flex flex-col sm:flex-row gap-2">

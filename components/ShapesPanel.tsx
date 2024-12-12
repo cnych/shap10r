@@ -127,7 +127,6 @@ export const ShapesPanel: FC = () => {
   }, [game, grid, currentRow, game?.checkedRows, updateTrigger]);
 
   if (!game) {
-    console.warn('【ShapesPanel】游戏未初始化，不渲染面板');
     return null;
   }
 
