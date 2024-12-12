@@ -8,7 +8,6 @@ type MessageType =
 
 interface GameModalProps {
   isOpen: boolean;
-  onClose: () => void;
   title: string;
   message: MessageType;
   showShare?: boolean;
@@ -21,7 +20,6 @@ interface GameModalProps {
 
 export const GameModal: FC<GameModalProps> = ({
   isOpen,
-  onClose,
   title,
   message,
   showShare = false,

@@ -14,7 +14,6 @@ export const GameModalWrapper = () => {
     onShare, 
     onRestart,
     shareImage,
-    closeModal 
   } = useGameModal();
 
   return (
@@ -27,7 +26,6 @@ export const GameModalWrapper = () => {
       buttonText={buttonText}
       onShare={onShare}
       onRestart={onRestart}
-      onClose={closeModal}
       shareImage={shareImage}
     />
   );

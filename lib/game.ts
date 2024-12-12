@@ -301,12 +301,12 @@ export class Game implements IGame {
     this.soundManager.play('check');
 
     let isWin = true;
-    let sum = 0;
+    // let sum = 0;
     
     // 计算当前行的数字之和
-    currentRowShapes.forEach(shape => {
-      if (shape) sum += shape.number;
-    });
+    // currentRowShapes.forEach(shape => {
+    //   if (shape) sum += shape.number;
+    // });
 
     // 重置所有形状状态
     currentRowShapes.forEach(shape => {
@@ -331,6 +331,7 @@ export class Game implements IGame {
       const usedSolutions = new Set<number>();
       
       currentRowShapes.forEach((shape, index) => {
+        console.log('shape index', index);
         if (!shape || shape.state === SHAPE_STATE.CORRECT) return;
 
         const solutionIndex = solutionCopy.findIndex((solution, idx) => 

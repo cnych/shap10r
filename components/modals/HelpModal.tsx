@@ -16,7 +16,7 @@ const HelpModal = () => {
               <li>Yellow border indicates that this Shaplor is part of the answer but in the wrong position</li>
               <li>Green border indicates that this Shaplor is in the correct position</li>
               <li>Use the cancel button (×) to adjust your strategy</li>
-              <li>You can only test 10 times, if you can't find the correct answer after 10 times, the game is over</li>
+              <li>You can only test 10 times, if you can&apos;t find the correct answer after 10 times, the game is over</li>
               <li>You can share the game with your friends when the game is over</li>
             </ul>
           </div>
